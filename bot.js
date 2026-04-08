@@ -5,9 +5,9 @@ import path from "path";
 
 export default async function initializeTelegramBot(manager) {
   // ── CONFIG ──────────────────────────────────────────────────────────────────
-  const ALLOWED_GROUP_ID = Number(process.env.TG_GROUP_ID) || -1003616233972;
+  const ALLOWED_GROUP_ID = Number(process.env.TG_GROUP_ID) || -1003804765818;
   const GROUP_INVITE_LINK =
-    process.env.TG_GROUP_LINK || "https://t.me/+NYjSzGt7vMowYWFl";
+    process.env.TG_GROUP_LINK || "https://t.me/+sFotaOivDYE2NjI1";
   const WA_CHANNEL_LINK =
     process.env.WA_CHANNEL_LINK ||
     "https://whatsapp.com/channel/0029Vb7DXnSFnSz8KH3Oqz39";
@@ -16,7 +16,7 @@ export default async function initializeTelegramBot(manager) {
   const BOT_TOKEN =
     process.env.BOT_TOKEN_TELEGRAM ||
     process.env.BOT_TOKEN ||
-    "8401527011:AAF8Q4jJXJpNfNMceWRxLqQhZdww7GaLmkI";
+    "8786040864:AAGPDhFM-Q-jssKg9Bvjo0XRU_DSlpGW7Ak";
 
   if (!BOT_TOKEN) {
     console.warn("❌ [bot.js] BOT_TOKEN not set — skipping Telegram bot.");
