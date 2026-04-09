@@ -9,11 +9,16 @@ const theme = getTheme();
 
 // helper to resolve bot number safely
 function resolveBotNumber(conn) {
-  // prefer conn.id if provided, else fallback to conn.user.id split
+  // Always return clean phone number (no @s.whatsapp.net, no :xx device suffix)
+  // This must match sessionId used in client.js DB operations
   if (!conn) return null;
-  if (conn.id) return String(conn.id);
-  if (conn.user && conn.user.id) return String(conn.user.id).split(":")[0];
-  return null;
+  const raw =
+    conn.user?.id || // "919832962298:0@s.whatsapp.net"
+    conn.id ||
+    conn.user ||
+    null;
+  if (!raw) return null;
+  return String(raw).split("@")[0].split(":")[0].replace(/[^0-9]/g, "") || null;
 }
 
 // 🔹 Auto Status Seen
@@ -25,11 +30,11 @@ Module({
   if (!message.isfromMe) return message.send(theme.isfromMe);
   const botNumber = resolveBotNumber(message.conn);
   if (!botNumber) return message.send("❌ Bot number not found.");
-
+  
   const input = match?.trim().toLowerCase();
-
+  
   const key = "autostatus_seen"; // hot-key name used in handler
-
+  
   if (input === "on" || input === "off") {
     await message.react("⏳");
     try {
@@ -44,7 +49,7 @@ Module({
       return await message.send("❌ *Error updating auto status view*");
     }
   }
-
+  
   const status = db.get(botNumber, key, false) === true;
   return await message.send(
     `⚙️ *Auto Status View*\n> Status: ${
@@ -62,10 +67,10 @@ Module({
   if (!message.isfromMe) return message.send(theme.isfromMe);
   const botNumber = resolveBotNumber(message.conn);
   if (!botNumber) return message.send("❌ Bot number not found.");
-
+  
   const input = match?.trim().toLowerCase();
   const key = "autotyping";
-
+  
   if (input === "on" || input === "off") {
     await message.react("⏳");
     try {
@@ -80,7 +85,7 @@ Module({
       return await message.send("❌ *Error updating auto typing*");
     }
   }
-
+  
   const status = db.get(botNumber, key, false) === true;
   return await message.send(
     `⚙️ *Auto Typing*\n> Status: ${
@@ -98,10 +103,10 @@ Module({
   if (!message.isfromMe) return message.send(theme.isfromMe);
   const botNumber = resolveBotNumber(message.conn);
   if (!botNumber) return message.send("❌ Bot number not found.");
-
+  
   const input = match?.trim().toLowerCase();
   const key = "autorecord";
-
+  
   if (input === "on" || input === "off") {
     await message.react("⏳");
     try {
@@ -116,7 +121,7 @@ Module({
       return await message.send("❌ *Error updating auto record*");
     }
   }
-
+  
   const status = db.get(botNumber, key, false) === true;
   return await message.send(
     `🎤 *Auto Record*\n> Status: ${
@@ -134,10 +139,10 @@ Module({
   if (!message.isfromMe) return message.send(theme.isfromMe);
   const botNumber = resolveBotNumber(message.conn);
   if (!botNumber) return message.send("❌ Bot number not found.");
-
+  
   const input = match?.trim().toLowerCase();
   const key = "autoreact";
-
+  
   if (input === "on" || input === "off") {
     await message.react("⏳");
     try {
@@ -152,7 +157,7 @@ Module({
       return await message.send("❌ *Error updating AutoReact*");
     }
   }
-
+  
   const status = db.get(botNumber, key, false) === true;
   return await message.send(
     `⚙️ *AutoReact*\n> Status: ${
@@ -170,10 +175,10 @@ Module({
   if (!message.isfromMe) return message.send(theme.isfromMe);
   const botNumber = resolveBotNumber(message.conn);
   if (!botNumber) return message.send("❌ Bot number not found.");
-
+  
   const input = match?.trim().toLowerCase();
   const key = "anticall";
-
+  
   if (input === "on" || input === "off") {
     await message.react("⏳");
     try {
@@ -188,7 +193,7 @@ Module({
       return await message.send("❌ *Error updating AntiCall*");
     }
   }
-
+  
   const status = db.get(botNumber, key, false) === true;
   return await message.send(
     `⚙️ *AntiCall*\n> Status: ${
@@ -206,10 +211,10 @@ Module({
   if (!message.isfromMe) return message.send(theme.isfromMe);
   const botNumber = resolveBotNumber(message.conn);
   if (!botNumber) return message.send("❌ Bot number not found.");
-
+  
   const input = match?.trim().toLowerCase();
   const key = "autoread";
-
+  
   if (input === "on" || input === "off") {
     await message.react("⏳");
     try {
@@ -224,7 +229,7 @@ Module({
       return await message.send("❌ *Error updating AutoRead*");
     }
   }
-
+  
   const status = db.get(botNumber, key, false) === true;
   return await message.send(
     `⚙️ *AutoRead*\n> Status: ${

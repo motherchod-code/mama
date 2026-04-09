@@ -96,7 +96,7 @@ Module({
   const targetJid = matchJid?.endsWith("@g.us") ? matchJid : message.from;
 
   if (!targetJid?.endsWith("@g.us")) return message.send("❌ Group only");
-  if (!message.isAdmin && !message.isFromMe)
+  if (!message.isAdmin && !message.isfromMe)
     return message.send("❌ Admin only");
   if (!message.isBotAdmin) return message.send("❌ Bot must be admin");
 

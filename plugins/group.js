@@ -33,7 +33,10 @@ const extractJid = (message) => {
  */
 const checkPermissions = async (message) => {
   try {
-    await message.loadGroupInfo();
+    // Load fresh group metadata before checking permissions
+    if (typeof message.loadGroupInfo === "function") {
+      await message.loadGroupInfo().catch(() => {});
+    }
 
     if (!message.isGroup) {
       await message.send(theme.isGroup || "_This command is only for groups_");
@@ -42,7 +45,7 @@ const checkPermissions = async (message) => {
 
     if (!message.isAdmin && !message.isfromMe) {
       await message.send(
-        theme.isAdmin || " _This command requires admin privileges_"
+        theme.isAdmin || "_This command requires admin privileges_"
       );
       return false;
     }
@@ -78,28 +81,28 @@ const areJidsSame = (message, jid1, jid2) => {
 const extractMultipleJids = (message) => {
   const jids = [];
 
-  // Add mentions
-  if (message.mentions?.length > 0) {
+  // 1) @mention tags (highest priority)
+  if (Array.isArray(message.mentions) && message.mentions.length > 0) {
     jids.push(...message.mentions);
   }
 
-  // Add quoted participant
-  if (message.quoted?.participant) {
-    jids.push(message.quoted.participant);
-  }
+  // 2) Reply/quoted message participant
+  const quotedSender =
+    message.quoted?.participant ||
+    message.quoted?.participantAlt ||
+    message.quoted?.sender ||
+    null;
+  if (quotedSender) jids.push(quotedSender);
 
-  // Extract numbers from text
-  const text = message.body.split(" ").slice(1).join(" ");
-  const numbers = text.match(/\d+/g) || [];
+  // 3) Raw phone numbers in the command text (e.g. .kick 919832962298)
+  const text = (message.body || "").split(" ").slice(1).join(" ");
+  const numbers = text.replace(/[+\-()\s]/g, "").match(/\d{10,15}/g) || [];
+  numbers.forEach((num) => jids.push(`${num}@s.whatsapp.net`));
 
-  numbers.forEach((num) => {
-    if (num.length >= 10) {
-      jids.push(`${num}@s.whatsapp.net`);
-    }
-  });
-
-  // Remove duplicates
-  return [...new Set(jids)];
+  // Normalize and deduplicate
+  return [...new Set(jids.filter(Boolean).map((j) =>
+    j.includes("@") ? j : `${j}@s.whatsapp.net`
+  ))];
 };
 
 // ==================== MEMBER MANAGEMENT ====================
@@ -394,7 +397,7 @@ Module({
       return message.send("❌ _Tag or reply to user(s) to kick_");
     }
 
-    const baileys = await import("baileys");
+    const baileys = await import("@whiskeysockets/baileys");
     const { jidNormalizedUser } = baileys;
     const botJid = jidNormalizedUser(message.conn.user.id);
     const validJids = [];
@@ -414,7 +417,7 @@ Module({
       }
 
       // Check if trying to kick admin
-      const isTargetAdmin = message.groupAdmins.some((adminId) =>
+      const isTargetAdmin = (message.groupAdmins || []).some((adminId) =>
         areJidsSame(message, adminId, jid)
       );
 
@@ -472,7 +475,7 @@ Module({
 
     for (const jid of jids) {
       // Check if already admin
-      const isAlreadyAdmin = message.groupAdmins.some((adminId) =>
+      const isAlreadyAdmin = (message.groupAdmins || []).some((adminId) =>
         areJidsSame(message, adminId, jid)
       );
 
@@ -484,7 +487,7 @@ Module({
       }
 
       // Check if user is in group
-      const isInGroup = message.groupParticipants.some((p) =>
+      const isInGroup = (message.groupParticipants || []).some((p) =>
         areJidsSame(message, p.id, jid)
       );
 
@@ -548,7 +551,7 @@ Module({
       }
 
       // Check if admin
-      const isAdmin = message.groupAdmins.some((adminId) =>
+      const isAdmin = (message.groupAdmins || []).some((adminId) =>
         areJidsSame(message, adminId, jid)
       );
 

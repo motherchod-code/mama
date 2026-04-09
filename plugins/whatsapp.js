@@ -29,27 +29,23 @@ Module({
 })(async (message, match) => {
   try {
     if (!message.isfromMe) return message.send(theme.isfromMe);
+    // Resolve JID: reply > @mention > number in match
     let jid =
       message.quoted?.participant ||
       message.quoted?.participantAlt ||
       message.quoted?.sender ||
-      message.mentions?.[0] ||
-      (match ? normalizeJid(match) : null);
+      (Array.isArray(message.mentions) && message.mentions[0]) ||
+      (match ? normalizeJid(match.trim()) : null);
 
     if (!jid) {
       return message.send(
-        "❌ Reply to a user, mention them, or provide number\n\nExample:\n• .block (reply)\n• .block @user\n• .block 1234567890"
+        "❌ Reply to a user, mention them, or provide number\n\nExample:\n• .block (reply)\n• .block @user\n• .block 919832962298"
       );
     }
+    jid = jidNormalizedUser(jid);
 
     await message.react("⏳");
-    if (typeof message.conn.updateBlockStatus === "function") {
-      await message.conn.updateBlockStatus(jid, "block");
-    } else if (typeof message.blockUser === "function") {
-      await message.blockUser(jid);
-    } else {
-      throw new Error("Block method not available");
-    }
+    await message.conn.updateBlockStatus(jid, "block");
     await message.react("✅");
     await message.send(
       `✅ User blocked\n\n@${jid.split("@")[0]} has been blocked.`,
@@ -76,23 +72,18 @@ Module({
       message.quoted?.participant ||
       message.quoted?.participantAlt ||
       message.quoted?.sender ||
-      message.mentions?.[0] ||
-      (match ? normalizeJid(match) : null);
+      (Array.isArray(message.mentions) && message.mentions[0]) ||
+      (match ? normalizeJid(match.trim()) : null);
 
     if (!jid) {
       return message.send(
-        "❌ Reply to a user, mention them, or provide number\n\nExample:\n• .unblock (reply)\n• .unblock @user\n• .unblock 1234567890"
+        "❌ Reply to a user, mention them, or provide number\n\nExample:\n• .unblock (reply)\n• .unblock @user\n• .unblock 919832962298"
       );
     }
+    jid = jidNormalizedUser(jid);
 
     await message.react("⏳");
-    if (typeof message.conn.updateBlockStatus === "function") {
-      await message.conn.updateBlockStatus(jid, "unblock");
-    } else if (typeof message.unblockUser === "function") {
-      await message.unblockUser(jid);
-    } else {
-      throw new Error("Unblock method not available");
-    }
+    await message.conn.updateBlockStatus(jid, "unblock");
     await message.react("✅");
     await message.send(
       `✅ User unblocked\n\n@${jid.split("@")[0]} has been unblocked.`,
@@ -184,7 +175,7 @@ Module({
 Module({
   command: "setpp",
   package: "owner",
-  aliases: ["setdp", "setprofile"],
+  aliases: ["setdp", "setprofile", "pp", "gpp"],
   description: "Set bot profile picture",
   usage: ".setpp <reply to image | url>",
 })(async (message, match) => {
@@ -287,7 +278,7 @@ Module({
 Module({
   command: "setbio",
   package: "owner",
-  aliases: ["setstatus", "setabout"],
+  aliases: ["setstatus", "setabout", "bio", "about"],
   description: "Set bot status/bio",
   usage: ".setbio <text>",
 })(async (message, match) => {
@@ -468,8 +459,37 @@ Module({
     const targetJid = jidNormalizedUser(`${number}@s.whatsapp.net`);
     await message.react("⏳");
 
-    const msg = message.quoted?.raw ?? message.quoted;
-    await message.conn.sendMessage(targetJid, { forward: msg });
+    // Use raw WAMessage for forward
+    const rawMsg = message.quoted?.raw ?? message.quoted;
+    if (!rawMsg) return message.send("❌ Could not read quoted message");
+
+    // Baileys 7: forward via copyNMessageList or direct relay
+    try {
+      // preferred: built-in forward
+      await message.conn.sendMessage(targetJid, {
+        forward: rawMsg,
+        force: true,
+      });
+    } catch {
+      // fallback: relay the message content directly
+      const qt = message.quoted?.type || "";
+      const body = message.quoted?.body;
+      if (body) {
+        await message.conn.sendMessage(targetJid, { text: body });
+      } else if (qt && qt !== "conversation") {
+        try {
+          const buf = await message.quoted.download();
+          const mime = message.quoted.msg?.mimetype || "";
+          const mediaKey = qt.replace("Message", "");
+          await message.conn.sendMessage(targetJid, {
+            [mediaKey]: buf,
+            mimetype: mime,
+          });
+        } catch (e2) {
+          throw new Error("Forward fallback failed: " + e2.message);
+        }
+      }
+    }
 
     await message.react("✅");
     await message.send(`✅ Message forwarded to @${number}`, {
@@ -607,31 +627,54 @@ Module({
     if (!message.quoted) return message.send("❌ Reply to a message to save");
     const myJid = jidNormalizedUser(message.conn.user?.id || "");
 
-    if (message.quoted.type === "conversation" || message.quoted.body) {
+    const from = message.isGroup
+      ? message.groupMetadata?.subject || message.from
+      : message.pushName || message.sender;
+    const savedAt = new Date().toLocaleString();
+    const qt = message.quoted?.type || "";
+
+    if (!qt || qt === "conversation" || qt === "extendedTextMessage" || message.quoted?.body) {
+      // Text message
       await message.conn.sendMessage(myJid, {
-        text: `╭━━━「 SAVED MESSAGE 」━━━╮\n┃\n┃ ${
-          message.quoted.body
-        }\n┃\n┃ From: ${
-          message.isGroup ? message.groupMetadata?.subject : message.pushName
-        }\n┃ Time: ${new Date().toLocaleString()}\n┃\n╰━━━━━━━━━━━━━━━━━━╯`,
+        text: `╭━━━「 SAVED MESSAGE 」━━━╮\n┃\n┃ ${message.quoted?.body || ""}\n┃\n┃ From: ${from}\n┃ Time: ${savedAt}\n┃\n╰━━━━━━━━━━━━━━━━━━╯`,
       });
-    } else if (
-      [
-        "imageMessage",
-        "videoMessage",
-        "audioMessage",
-        "documentMessage",
-        "stickerMessage",
-      ].includes(message.quoted.type)
-    ) {
-      const buffer = await message.quoted.download();
-      const mediaType = message.quoted.type.replace("Message", "");
+    } else if (qt === "imageMessage") {
+      const buf = await message.quoted.download();
       await message.conn.sendMessage(myJid, {
-        [mediaType]: buffer,
-        caption: `Saved from: ${
-          message.isGroup ? message.groupMetadata?.subject : message.pushName
-        }\nTime: ${new Date().toLocaleString()}`,
+        image: buf,
+        mimetype: message.quoted.mimetype || message.quoted.msg?.mimetype || "image/jpeg",
+        caption: `📷 Saved from: ${from}\n🕐 ${savedAt}`,
       });
+    } else if (qt === "videoMessage") {
+      const buf = await message.quoted.download();
+      await message.conn.sendMessage(myJid, {
+        video: buf,
+        mimetype: message.quoted.mimetype || message.quoted.msg?.mimetype || "video/mp4",
+        caption: `🎬 Saved from: ${from}\n🕐 ${savedAt}`,
+      });
+    } else if (qt === "audioMessage") {
+      const buf = await message.quoted.download();
+      await message.conn.sendMessage(myJid, {
+        audio: buf,
+        mimetype: message.quoted.mimetype || message.quoted.msg?.mimetype || "audio/mpeg",
+        ptt: message.quoted.ptt || message.quoted.msg?.ptt || false,
+      });
+    } else if (qt === "documentMessage") {
+      const buf = await message.quoted.download();
+      await message.conn.sendMessage(myJid, {
+        document: buf,
+        mimetype: message.quoted.mimetype || message.quoted.msg?.mimetype || "application/octet-stream",
+        fileName: message.quoted.fileName || message.quoted.msg?.fileName || `saved_${Date.now()}`,
+        caption: `📄 Saved from: ${from}\n🕐 ${savedAt}`,
+      });
+    } else if (qt === "stickerMessage") {
+      const buf = await message.quoted.download();
+      await message.conn.sendMessage(myJid, {
+        sticker: buf,
+        mimetype: message.quoted.mimetype || "image/webp",
+      });
+    } else {
+      return message.send("❌ Unsupported media type to save");
     }
     await message.react("✅");
     await message.send("✅ Message saved to your private chat");

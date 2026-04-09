@@ -80,7 +80,7 @@ Module({
       if (user === ownerJid) continue;
 
       // ❌ Admin protect (unless sudo)
-      const isTargetAdmin = message.groupAdmins
+      const isTargetAdmin = (message.groupAdmins || [])
         .map((a) => jidNormalizedUser(a))
         .includes(user);
 

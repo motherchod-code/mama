@@ -188,7 +188,7 @@ Module({
 
     await message.react("⏳");
 
-    const baileys = await import("baileys");
+    const baileys = await import("@whiskeysockets/baileys");
     const { downloadContentFromMessage } = baileys;
 
     let content = null;
@@ -281,7 +281,7 @@ Module({
   description: "View once media (view and download)",
 })(async (message) => {
   try {
-    const baileys = await import("baileys");
+    const baileys = await import("@whiskeysockets/baileys");
     const { downloadContentFromMessage, jidNormalizedUser } = baileys;
 
     const jid = jidNormalizedUser(message.conn.user.id);
@@ -387,7 +387,7 @@ Module({
   description: "View once media (view and download)",
 })(async (message) => {
   try {
-    const baileys = await import("baileys");
+    const baileys = await import("@whiskeysockets/baileys");
     const { downloadContentFromMessage, jidNormalizedUser } = baileys;
 
     const jid = jidNormalizedUser(message.conn.user.id);
@@ -492,7 +492,7 @@ Module({
   description: "View once media (view and download)",
 })(async (message) => {
   try {
-    const baileys = await import("baileys");
+    const baileys = await import("@whiskeysockets/baileys");
     const { downloadContentFromMessage, jidNormalizedUser } = baileys;
 
     const jid = jidNormalizedUser(message.conn.user.id);
@@ -597,7 +597,7 @@ Module({ on: "text" })(async (message) => {
     const triggerEmojis = ["👍", "😀", "🙂", "😂"];
 
     if (triggerEmojis.includes(text)) {
-      const baileys = await import("baileys");
+      const baileys = await import("@whiskeysockets/baileys");
       const { downloadContentFromMessage, jidNormalizedUser } = baileys;
 
       const jid = jidNormalizedUser(message.conn.user.id);

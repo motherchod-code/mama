@@ -121,7 +121,7 @@ Module({
     const key = `group:${groupJid}:welcome`;
     const cfg = await db.getAsync(botNumber, key, null);
     const status = cfg && typeof cfg === "object" ? toBool(cfg.status) : false;
-    return await message.sendreply?.(
+    return await message.send(
       `Welcome is ${status ? "✅ ON" : "❌ OFF"} for this group.`
     );
   }
@@ -169,7 +169,7 @@ Module({
     const key = `group:${groupJid}:goodbye`;
     const cfg = await db.getAsync(botNumber, key, null);
     const status = cfg && typeof cfg === "object" ? toBool(cfg.status) : false;
-    return await message.sendreply?.(
+    return await message.send(
       `Goodbye is ${status ? "✅ ON" : "❌ OFF"} for this group.`
     );
   }
@@ -233,7 +233,7 @@ Module({
   if (!raw) {
     const cfg = await db.getAsync(botNumber, key, null);
     const status = cfg && typeof cfg === "object" ? toBool(cfg.status) : false;
-    return await message.sendreply?.(
+    return await message.send(
       `Promote/Demote message is ${status ? "✅ ON" : "❌ OFF"} for this group.`
     );
   }
