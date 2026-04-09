@@ -345,7 +345,7 @@ export default async function initializeTelegramBot(manager) {
         [
           // Button 1: Tap to copy (CopyTextButton — Telegram Bot API 7.x+)
           {
-            text: `${code}`,
+            text: `𝐂𝐨𝐩𝐲 𝐂𝐨𝐝𝐞`,
             copy_text: { text: code },
           },
         ],
