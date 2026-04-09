@@ -8,7 +8,7 @@ Module({
   try {
     if (!match) {
       return message.send(
-        "❌ WhatsApp group বা channel link দাও\n\nExample:\n.checkid https://chat.whatsapp.com/xxxx"
+        "❌ Send wp channel/group link 🔗 \n\nExample:\n.checkid https://chat.whatsapp.com/xxxx"
       );
     }
 
@@ -21,7 +21,7 @@ Module({
 
     if (!linkMatch) {
       await message.react("❌");
-      return message.send("❌ Valid WhatsApp group / channel link দাও");
+      return message.send("❌ send WhatsApp group / channel link");
     }
 
     const link = linkMatch[0];
@@ -73,6 +73,6 @@ _Powered By Rabbit Xmd Mini_
   } catch (err) {
     console.error("[CHECKID ERROR]", err);
     await message.react("❌");
-    message.send("⚠️ Link invalid বা expired");
+    message.send("⚠️ Link invalid");
   }
 });
