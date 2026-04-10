@@ -8,7 +8,7 @@ import os from "os";
 import { Module } from "../lib/plugins.js";
 
 Module({
-  command: "play",
+  command: "kplay",
   description: "Play song as voice note",
 })(async (message, match, m, client) => {
   try {
