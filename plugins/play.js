@@ -26,7 +26,7 @@ Module({
     const caption = `
 🎵 *Now Playing*
 
-Pᴏᴡᴇʀᴇᴅ Bʏ Rᴀʙʙɪᴛ Xᴍᴅ Mɪɴɪ
+Pᴏᴡᴇʀᴇᴅ Bʏ sᴀʏᴀɴ - xᴍᴅ
 
 📌 *Title:* ${video.title}
 👤 *Channel:* ${video.author.name}
@@ -44,8 +44,8 @@ Pᴏᴡᴇʀᴇᴅ Bʏ Rᴀʙʙɪᴛ Xᴍᴅ Mɪɴɪ
         forwardingScore: 999,
         isForwarded: true,
         forwardedNewsletterMessageInfo: {
-          newsletterJid: "120363404737630340@newsletter",
-          newsletterName: "𝐑ᴀʙʙɪᴛ Xᴍᴅ",
+          newsletterJid: "120363418088880523@newsletter",
+          newsletterName: "sᴀʏᴀɴ -Xᴍᴅ",
           serverMessageId: 6,
         },
       },
@@ -73,7 +73,7 @@ Pᴏᴡᴇʀᴇᴅ Bʏ Rᴀʙʙɪᴛ Xᴍᴅ Mɪɴɪ
       contextInfo: {
         externalAdReply: {
           title: data.data.title || video.title,
-          body: "Powered By Rabbit Xmd Mini",
+          body: "Powered By sᴀʏᴀɴ - xᴍᴅ",
           mediaType: 2,
           sourceUrl: video.url,
           thumbnailUrl: video.thumbnail,

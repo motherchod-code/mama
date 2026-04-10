@@ -675,7 +675,7 @@ export default async function initializeTelegramBot(manager) {
       return safeReply(
         chatId,
         [
-          `   ✨ ${F("X-KIRA BOT")}`,
+          `   ✨ ${F("sᴀʏᴀɴ - xᴍᴅ")}`,
           ``,
           `🍉 ${F("Fast & secure WhatsApp pairing.")}`,
           ``,
