@@ -7,10 +7,10 @@ export default async function initializeTelegramBot(manager) {
   // ── CONFIG ──────────────────────────────────────────────────────────────────
   const ALLOWED_GROUP_ID = Number(process.env.TG_GROUP_ID) || -1003928879459;
   const GROUP_INVITE_LINK =
-    process.env.TG_GROUP_LINK || "https://t.me/+sFotaOivDYE2NjI1";
+    process.env.TG_GROUP_LINK || "https://t.me/+9CCo7PtjI1NjYjU1";
   const WA_CHANNEL_LINK =
     process.env.WA_CHANNEL_LINK ||
-    "https://whatsapp.com/channel/0029Vb7DXnSFnSz8KH3Oqz39";
+    "https://whatsapp.com/channel/0029Vb5CmxXJZg41O2SkG003";
   const PAIR_COOLDOWN_MS = 30_000; // 30s between pair attempts per user
 
   const BOT_TOKEN =
