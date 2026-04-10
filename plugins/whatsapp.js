@@ -619,71 +619,123 @@ Module({
 Module({
   command: "save",
   package: "owner",
-  description: "Save quoted message to private chat",
-  usage: ".save <reply to message>",
+  description: "Save quoted message (3 fallback system)",
 })(async (message) => {
   try {
-    if (!message.isfromMe) return message.send(theme.isfromMe);
-    if (!message.quoted) return message.send("❌ Reply to a message to save");
-    const myJid = jidNormalizedUser(message.conn.user?.id || "");
+    if (!message.isfromMe)
+      return message.send("❌ Only owner");
 
-    const from = message.isGroup
-      ? message.groupMetadata?.subject || message.from
-      : message.pushName || message.sender;
-    const savedAt = new Date().toLocaleString();
-    const qt = message.quoted?.type || "";
+    if (!message.quoted)
+      return message.send("❌ Reply to a message");
 
-    if (!qt || qt === "conversation" || qt === "extendedTextMessage" || message.quoted?.body) {
-      // Text message
-      await message.conn.sendMessage(myJid, {
-        text: `╭━━━「 SAVED MESSAGE 」━━━╮\n┃\n┃ ${message.quoted?.body || ""}\n┃\n┃ From: ${from}\n┃ Time: ${savedAt}\n┃\n╰━━━━━━━━━━━━━━━━━━╯`,
-      });
-    } else if (qt === "imageMessage") {
-      const buf = await message.quoted.download();
-      await message.conn.sendMessage(myJid, {
-        image: buf,
-        mimetype: message.quoted.mimetype || message.quoted.msg?.mimetype || "image/jpeg",
-        caption: `📷 Saved from: ${from}\n🕐 ${savedAt}`,
-      });
-    } else if (qt === "videoMessage") {
-      const buf = await message.quoted.download();
-      await message.conn.sendMessage(myJid, {
-        video: buf,
-        mimetype: message.quoted.mimetype || message.quoted.msg?.mimetype || "video/mp4",
-        caption: `🎬 Saved from: ${from}\n🕐 ${savedAt}`,
-      });
-    } else if (qt === "audioMessage") {
-      const buf = await message.quoted.download();
-      await message.conn.sendMessage(myJid, {
-        audio: buf,
-        mimetype: message.quoted.mimetype || message.quoted.msg?.mimetype || "audio/mpeg",
-        ptt: message.quoted.ptt || message.quoted.msg?.ptt || false,
-      });
-    } else if (qt === "documentMessage") {
-      const buf = await message.quoted.download();
-      await message.conn.sendMessage(myJid, {
-        document: buf,
-        mimetype: message.quoted.mimetype || message.quoted.msg?.mimetype || "application/octet-stream",
-        fileName: message.quoted.fileName || message.quoted.msg?.fileName || `saved_${Date.now()}`,
-        caption: `📄 Saved from: ${from}\n🕐 ${savedAt}`,
-      });
-    } else if (qt === "stickerMessage") {
-      const buf = await message.quoted.download();
-      await message.conn.sendMessage(myJid, {
-        sticker: buf,
-        mimetype: message.quoted.mimetype || "image/webp",
-      });
-    } else {
-      return message.send("❌ Unsupported media type to save");
+    const client = message.conn;
+    const myJid = jidNormalizedUser(client.user.id);
+
+    const quoted = message.quoted;
+    const msg = quoted.message;
+    const type = quoted.type;
+
+    let saved = false;
+
+    // 🥇 1️⃣ forwardMessage (custom / fast)
+    try {
+      if (client.forwardMessage) {
+        await client.forwardMessage(myJid, msg);
+        saved = true;
+      }
+    } catch (e) {
+      console.log("forwardMessage failed");
     }
+
+    // 🥈 2️⃣ copyNForward (official best)
+    if (!saved) {
+      try {
+        await client.copyNForward(myJid, msg);
+        saved = true;
+      } catch (e) {
+        console.log("copyNForward failed");
+      }
+    }
+
+    // 🥉 3️⃣ buffer fallback (ultimate)
+    if (!saved) {
+      try {
+        // TEXT
+        if (
+          !type ||
+          type === "conversation" ||
+          type === "extendedTextMessage"
+        ) {
+          await client.sendMessage(myJid, {
+            text: quoted.body || "",
+          });
+          saved = true;
+        } else {
+          const buffer = await quoted.download();
+
+          if (!buffer) throw "Download failed";
+
+          const mimetype =
+            quoted.mimetype || quoted.msg?.mimetype;
+
+          let data = {};
+
+          if (type === "imageMessage") {
+            data = {
+              image: buffer,
+              caption: quoted.caption || "",
+            };
+          } else if (type === "videoMessage") {
+            data = {
+              video: buffer,
+              caption: quoted.caption || "",
+            };
+          } else if (type === "audioMessage") {
+            data = {
+              audio: buffer,
+              mimetype: mimetype || "audio/mpeg",
+              ptt: quoted.ptt || false,
+            };
+          } else if (type === "documentMessage") {
+            data = {
+              document: buffer,
+              mimetype:
+                mimetype || "application/octet-stream",
+              fileName:
+                quoted.fileName || `saved_${Date.now()}`,
+            };
+          } else if (type === "stickerMessage") {
+            data = {
+              sticker: buffer,
+            };
+          } else {
+            data = {
+              text: quoted.body || "Unsupported message",
+            };
+          }
+
+          await client.sendMessage(myJid, data);
+          saved = true;
+        }
+      } catch (e) {
+        console.log("Buffer fallback failed");
+      }
+    }
+
+    // ❌ সব fail
+    if (!saved) {
+      return message.send("❌ Failed to save message");
+    }
+
     await message.react("✅");
-    await message.send("✅ Message saved to your private chat");
+    await message.send("✅ Saved successfully");
+
   } catch (err) {
     console.error("Save command error:", err);
-    await message.send("❌ Failed to save message");
+    await message.send("❌ Error saving message");
   }
 });
-
+// 
 Module({
   command: "quoted",
   package: "owner",
